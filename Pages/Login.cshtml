@@ -1,0 +1,65 @@
+﻿@page "{handler?}"
+@model LoginModel
+@{
+    ViewData["Title"] = "Login";
+}
+
+<div class="text-center">
+    <h3 class="display-6">Anmeldung @Model.SiteNameLong</h3>
+
+
+    <form method="post"> 
+        <table style="width:100%;margin-left:14%">
+            <tr>
+                <td><span class="float-right"><i class="far fa-envelope"></i> Email: </span> </td>
+                <td><input style="width:200px" name="email" value="" class="float-left" /></td>
+            </tr>
+            <tr>
+                <td><span class="float-right"><i class="fas fa-key"></i> Passwort: </span> </td>
+                <td><input  style="width:200px" name="password" value="" type="password" class="float-left"/></td>
+            </tr>
+            <tr>
+                <td> </td>
+                <td><button class="btn btn-sm btn-primary float-left" id="loginBtn">Anmelden</button></td>
+            </tr>
+        </table>
+        
+    </form>
+
+</div>
+
+<script>
+    $('#loginBtn').click(function(){
+        var isLoggedIn = false;
+        checkLoggedIn();
+
+        function checkLoggedIn() {
+            if(location.search.indexOf("fileDownload?") !== -1) { // On download
+                var jqxhr = $.get( "/Index/IsLoggedIn", function() {
+                })
+                .done(function() {
+                    var searchParams = window.location.search.split("RedirectUrl=");
+                    if(searchParams.length >= 2) {
+                        var params = new URL(searchParams[1]).search.split('&');
+                        params.forEach(function(p) {
+                            if(p.indexOf('path=') !== -1) {
+                                setTimeout(redirectToDownloadFolder, 2000);
+
+                                function redirectToDownloadFolder() {
+                                    var url = "/changeFolder?path=" + p.substring(p.indexOf('path=')+5) + "empty";
+                                    window.location.replace(url); // Redirect to folder of file
+                                }
+                            }
+                        });
+                    }
+                    else {
+                        window.location.replace("/"); // Redirect to index
+                    }
+
+                })
+                .fail(function() {                
+                });
+            }
+        }
+    });
+</script>

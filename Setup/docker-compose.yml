@@ -1,0 +1,60 @@
+version: '3'
+
+networks:
+  fyleo-net:
+    driver: overlay
+
+services:  
+  nginx:
+    image: nginx:stable-alpine
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt
+      - /var/lib/letsencrypt:/var/lib/letsencrypt
+      - ${PWD}/nginx.conf:/etc/nginx/nginx.conf
+      - /usr/share/nginx/html:/usr/share/nginx/html
+    deploy:
+      mode: global
+      placement:
+        constraints:
+          - node.role == manager
+    ports:
+      - 80:80
+      - 443:443
+    networks:
+      - fyleo-net
+    depends_on:
+      - app-web
+
+  app-web:
+    image: mantenpanther/fyleo_gartl-app:latest
+    deploy:
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 200M
+    ports:
+      - "8080:80"
+    networks:
+      - fyleo-net
+    volumes:
+      - /home/fyleo/files:/app/files
+      - /home/fyleo/log:/app/log
+      - /home/fyleo/data:/app/data
+      - /home/fyleo/translations:/app/translations
+      - /home/fyleo/assets/logo.jpg:/app/wwwroot/logo.jpg
+      - /home/fyleo/assets/favicon.ico:/app/wwwroot/favicon.ico
+
+  shepherd:
+    image: mazzolino/shepherd
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /root/.docker/config.json:/root/.docker/config.json
+    environment:
+      - WITH_REGISTRY_AUTH="true"
+    deploy:
+      placement:
+        constraints:
+        - node.role == manager

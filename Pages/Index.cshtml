@@ -1,0 +1,283 @@
+﻿@page "{handler?}"
+@model IndexModel
+@{
+    ViewData["Title"] = @Model.SiteNameLong;
+}
+
+<div class="text-center">
+    <h3 class="display-6">@Model.SiteName @Model.Translations.ByKey("HEADER_FILE_STORAGE")</h3>    
+</div>
+
+<div class="container">
+  <div class="row">
+
+    <div class="col-sm-10">
+        <div>
+            <table>
+                <tr> 
+                    <td style="font-size:1.5em">               
+                        <div class="container">
+                            <div class="row">
+                                <span style="padding-right:10px">@Model.Translations.ByKey("HEADER_FILES")</span>
+                                <div class="col-xs" title="@Model.Translations.ByKey("TOOLTIP_SWITCH_PARENT_FOLDER")">                  
+                                    <form asp-page-handler="changeFolder" method="get"> 
+                                        <i class="far fa-folder-open"></i> @Model.Path.Replace(@Model.RootPath, "/")
+                                        <button class="btn btn-default"><i class="fas fa-folder-minus" style="font-size:1.5em"></i></button>
+                                        <input type="hidden" name="folderName" value="" />
+                                        <input type="hidden" name="path" value="@Model.Path" />
+                                    </form>
+                                </div>
+                                <div class="col-xs" title="@Model.Translations.ByKey("TOOLTIP_NEW_FOLDER")">
+                                    <button data-toggle="modal" data-target="#new-folder-submit" class="btn btn-default"><i class="fas fa-folder-plus" style="font-size:1.5em"></i></button>
+                                    <form id="newFolderForm"  asp-page-handler="folderNew" method="post" onsubmit="false">
+                                        <input type="hidden" name="path" value="@Model.Path" />
+                                    </form>     
+                                </div>
+                            </div>
+                        </div>
+
+                    </td>    
+                </tr> 
+                <tr>
+                    <td>
+                        <form method="post" enctype="multipart/form-data" asp-page-handler="UploadFiles">
+                            <input type="file" name="files" multiple />
+                            <input type="submit" value="Upload" />
+                            <input type="hidden" name="path" value="@Model.Path" />
+                        </form>
+                    </td>            
+                </tr>
+            </table>
+        </div>
+        <hr>
+        <div>
+            <table style="width:80%">
+                <thead>
+                    <tr>
+                        <th style="width:50%">@Model.Translations.ByKey("COL_NAME")</th>
+                        <th style="width:30%">@Model.Translations.ByKey("COL_MODIFIED")</th>
+                        <th>@Model.Translations.ByKey("COL_ACTION")</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var folderName in @Model.Folders)
+                    {
+                        <tr scope="row">  
+                            <td>
+                                <form asp-page-handler="changeFolder" method="get" title="@Model.Translations.ByKey("TOOLTIP_CHANGE_FOLDER")">               
+                                    <button class="btn btn-default">@if(folderName ==  @Model.Trash) {<i class="far fa-trash-alt"></i>} else {<i class="far fa-folder"></i>} @folderName</button> 
+                                    <input type="hidden" name="folderName" value="@folderName" />
+                                    <input type="hidden" name="path" value="@Model.Path" />
+                                </form>
+                            </td>
+                            <td></td>
+                            <td>
+                                <div class="container">
+                                    <div class="row">
+                                        @if(folderName != @Model.Trash) {
+                                            <div class="col-xs" title="@Model.Translations.ByKey("TOOLTIP_RENAME_FOLDER")">
+                                                <button onclick="$('#foldername').val('@folderName');$('#oldfoldername').text('@folderName');" data-toggle="modal" data-target="#edit-folder-submit" class="btn btn-default"><i class="fas fa-edit"></i></button>
+                                                <form id="editFolderForm"  asp-page-handler="folderEdit" method="post" onsubmit="false">
+                                                    <input type="hidden" name="path" value="@Model.Path" />
+                                                </form>                        
+                                            </div>
+                                            <div class="col-xs" title="@Model.Translations.ByKey("TITLE_DELETE_FOLDER")">
+                                                <form asp-page-handler="folderDelete" method="post" onsubmit="return confirm('@Model.Translations.ByKey("TEXT_DELETE_FOLDER")');">                
+                                                    <button class="btn btn-default"><i class="fas fa-trash"></i></button>
+                                                    <input type="hidden" name="folderName" value="@folderName" />
+                                                    <input type="hidden" name="path" value="@Model.Path" />
+                                                </form>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                    @foreach (var fileInfo in @Model.Files.OrderByDescending(x=>x.LastModified))
+                    {
+                        <tr scope="row"> 
+                            <td>           
+                                <form asp-page-handler="fileDownload" method="get" title="@Model.Translations.ByKey("TOOLTIP_DOWNLOAD_FOLDER")">                
+                                    <a style="text-align:left" role="button" href="/fileDownload?path=@Model.Path&fileName=@fileInfo.Name" class="btn btn-default"><i class="far fa-file"></i> @fileInfo.Name</a>
+                                    <input type="hidden" name="fileName" value="@fileInfo.Name" />
+                                    <input type="hidden" name="path" value="@Model.Path" />
+                                </form>
+                            </td>
+                            <td>@fileInfo.LastModified.ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>
+                                @if(!@Model.Path.Contains("/"+@Model.Trash+"/")) {
+                                    <div class="container">
+                                        <div class="row">
+                                            <div class="col-xs" title="@Model.Translations.ByKey("TOOLTIP_RENAME_FILE")">
+                                                <button onclick="$('#filename').val('@fileInfo.Name');$('#oldfilename').text('@fileInfo.Name');" data-toggle="modal" data-target="#edit-submit" class="btn btn-default"><i class="fas fa-edit"></i></button>
+                                                <form id="editFileForm"  asp-page-handler="fileEdit" method="post" onsubmit="false">
+                                                    <input type="hidden" name="path" value="@Model.Path" />
+                                                </form>                        
+                                            </div>
+                                            <div class="col-xs" title="@Model.Translations.ByKey("TITLE_DELETE_FILE")">
+                                                <form asp-page-handler="fileDelete" method="post" onsubmit="return confirm('@Model.Translations.ByKey("TEXT_DELETE_FILE")');">                
+                                                    <button class="btn btn-default"><i class="fas fa-trash"></i></button>
+                                                    <input type="hidden" name="fileName" value="@fileInfo.Name" />
+                                                    <input type="hidden" name="path" value="@Model.Path" />
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            </td>
+                        </tr>    
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="modal fade" id="edit-submit" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        @Model.Translations.ByKey("TITLE_MODIFY_FILE")                        
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                        @Model.Translations.ByKey("MODIFY_FILE_CURRENT_NAME"): <span id="oldfilename"></span>
+                        </p>
+                        <p>
+                        @Model.Translations.ByKey("MODIFY_FILE_NEW_NAME"): <input id="filename" />
+                        </p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">@Model.Translations.ByKey("CAPTION_CANCEL")</button>
+                        <a href="#" id="submitRenameFile" class="btn btn-success success">@Model.Translations.ByKey("CAPTION_CONFIRM")</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="edit-folder-submit" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        @Model.Translations.ByKey("TITLE_MODIFY_FOLDER")    
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                        @Model.Translations.ByKey("MODIFY_FILE_CURRENT_NAME"): <span id="oldfoldername"></span>
+                        </p>
+                        <p>
+                        @Model.Translations.ByKey("MODIFY_FILE_NEW_NAME"): <input id="foldername" />
+                        </p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">@Model.Translations.ByKey("CAPTION_CANCEL")</button>
+                        <a href="#" id="submitRenameFolder" class="btn btn-success success">@Model.Translations.ByKey("CAPTION_CONFIRM")</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="new-folder-submit" tabindex="-1" role="dialog" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">                        
+                        @Model.Translations.ByKey("TITLE_CREATE_FOLDER")   
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                        @Model.Translations.ByKey("CAPTION_NAME")  : <input id="newfoldername" />
+                        </p>
+                    </div>
+
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">@Model.Translations.ByKey("CAPTION_CANCEL")</button>
+                        <a href="#" id="submitNewFolder" class="btn btn-success success">@Model.Translations.ByKey("CAPTION_CONFIRM")</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="col-sm-2">
+        <div>
+            <div style="font-size:1.2em"><i class="fas fa-history"></i> @Model.Translations.ByKey("HEADER_LATEST_ACTIVITIES")</div>
+            <table style="width:100%">
+                <thead>
+                    <tr>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody style="font-size:0.7em">
+                @foreach (var activity in @Model.Activities)
+                {
+                    <tr>
+                        <td>
+                            <b>@activity.Timestamp.ToString("dd.MM.yyyy HH:mm")</b>
+                        </td> 
+                    </tr>
+                    <tr>
+                        <td>
+                            <i class="fas fa-user"></i> <span>@activity.User</span>
+                        </td>    
+                    </tr>
+                    <tr>
+                        <td>
+                            <i>@activity.Action</i>
+                        </td>
+                    </tr>
+                    <tr>      
+                        <td>
+                            @activity.Message.Replace(@Model.RootPath, "/")
+                        </td>    
+                    </tr>
+                }
+                </tbody>
+            </table>    
+        </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+    $('#submitRenameFile').click(function(){
+        var input = $("<input>")
+            .attr("type", "hidden")
+            .attr("name", "fileName").val($('#filename').val());
+        $('#editFileForm').append(input);
+        var inputOld = $("<input>")
+            .attr("type", "hidden")
+            .attr("name", "oldFileName").val($('#oldfilename').text());
+        $('#editFileForm').append(inputOld);            
+        $('#editFileForm').submit();
+        //$('#newFolderForm').remove(input);
+    });
+
+    $('#submitRenameFolder').click(function(){
+        var input = $("<input>")
+            .attr("type", "hidden")
+            .attr("name", "folderName").val($('#foldername').val());
+        $('#editFolderForm').append(input);
+        var inputOld = $("<input>")
+            .attr("type", "hidden")
+            .attr("name", "oldFolderName").val($('#oldfoldername').text());
+        $('#editFolderForm').append(inputOld);
+
+
+        $('#editFolderForm').submit();
+        //$('#editFolderForm').remove(input);
+    });
+    
+    $('#submitNewFolder').click(function(){
+        var input = $("<input>")
+            .attr("type", "hidden")
+            .attr("name", "newFolderName").val($('#newfoldername').val());
+        $('#newFolderForm').append(input);
+        $('#newFolderForm').submit();
+        //$('#newFolderForm').remove(input);
+    });
+
+</script>

@@ -1,0 +1,8 @@
+﻿@page
+@model PrivacyModel
+@{
+    ViewData["Title"] = "Nutzungsbedindungen & Impressum";
+}
+<h4>@ViewData["Title"]</h4>
+
+@Html.Raw(@Model.TermsContent)
