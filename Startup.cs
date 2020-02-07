@@ -36,7 +36,7 @@ namespace fyleo
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_3_0);
 
-            services.AddTransient<LanguageConfig>(x=> new LanguageConfig() { LangCode = "DE" });
+            services.AddTransient<LanguageConfig>(x=> new LanguageConfig() { LangCode = "EN" });
             services.AddTransient<ITranslations, Translations>();
             services.AddSingleton<IEventLog, EventLogFile>();
             services.AddSingleton<IAuthRepository, AuthRepository>();

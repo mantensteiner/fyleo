@@ -54,13 +54,13 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex flex-sm-row-reverse">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">Dateien</a>
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Index">@Model.Translations.ByKey("HEADER_FILES")</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">Bedingungen</a>
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Privacy">@Model.Translations.ByKey("HEADER_TERMS")</a>
                         </li>
                         <li class="nav-item" id="logout_button">
-                            <a class="nav-link text-dark" asp-area="" asp-page="/Logout">Logout</a>
+                            <a class="nav-link text-dark" asp-area="" asp-page="/Logout">@Model.Translations.ByKey("HEADER_LOGOUT")</a>
                         </li>
                     </ul>
                 </div>

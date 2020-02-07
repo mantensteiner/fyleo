@@ -24,5 +24,7 @@
     "CAPTION_NAME" : "Name",
     "TITLE_CREATE_FOLDER" : "Neuen Ordner anlegen",
     "HEADER_LATEST_ACTIVITIES" : "Letzte Aktivitäten",
-    "CAPTION_TOS": "Nutzungsbedingungen"
+    "CAPTION_TOS": "Nutzungsbedingungen",
+    "HEADER_TERMS": "Bedingungen",
+    "HEADER_LOGOUT": "Logout"
 }

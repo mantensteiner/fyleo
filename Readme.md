@@ -2,6 +2,9 @@
 
 ## A simple online file manager
 
+![alt text](screenshot_index.png "Screenshot")
+
+
 This is a basic .NET Core 3 application that uses Razor Pages. It provides a file-explorer like handling and supports some simple customizations:
 
 - Logo
