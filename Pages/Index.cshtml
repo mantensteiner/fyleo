@@ -74,7 +74,7 @@
                             <td>
                                 <div class="container">
                                     <div class="row">
-                                        @if(folderName != @Model.Trash) {
+                                        @if(!@Model.Path.Contains("/"+@Model.Trash+"/")) {
                                             <div class="col-xs" title="@Model.Translations.ByKey("TOOLTIP_RENAME_FOLDER")">
                                                 <button onclick="$('#foldername').val('@folderName');$('#oldfoldername').text('@folderName');" data-toggle="modal" data-target="#edit-folder-submit" class="btn btn-default"><i class="fas fa-edit"></i></button>
                                                 <form id="editFolderForm"  asp-page-handler="folderEdit" method="post" onsubmit="false">

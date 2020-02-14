@@ -45,6 +45,7 @@ namespace fyleo.EventLog
                     x.Split(';')[2] == Actions.UPLOAD_FILE || 
                     x.Split(';')[2] == Actions.DELETE_FOLDER || 
                     x.Split(';')[2] == Actions.EDIT_FOLDER || 
+                    x.Split(';')[2] == Actions.EDIT_FILE || 
                     x.Split(';')[2] == Actions.CREATE_FOLDER || 
                     x.Split(';')[2] == Actions.DELETE_FILE)
                 .TakeLast(10);

@@ -52,20 +52,8 @@ namespace fyleo.Pages
             {
                 if (formFile.Length > 0)
                 {
-                    var filePath = path + formFile.FileName;
-
-                    // Move existing file to trash for backup version
-                    if (System.IO.File.Exists(filePath))
-                    {
-                        var trashPath = RootPath + "/" + Translations.Trash + "/" + formFile.FileName + "." + DateTime.UtcNow.Ticks.ToString();
-                        System.IO.File.Copy(filePath, trashPath);
-                    }
-
-                    using (var stream = new FileStream(filePath, FileMode.Create))
-                    {
-                        await formFile.CopyToAsync(stream);
-                        await LogEvent(Actions.UPLOAD_FILE, filePath);
-                    }
+                    await fileRepository.SaveFile(path, formFile.FileName, formFile.OpenReadStream());
+                    await LogEvent(Actions.UPLOAD_FILE, fileRepository.Combine(path, formFile.FileName));
                 }
             }
 
@@ -109,7 +97,8 @@ namespace fyleo.Pages
         {
             try
             {
-                System.IO.File.Move(path + oldFileName, path + fileName);
+                fileRepository.EditFile(path, oldFileName, fileName);
+                await LogEvent(Actions.EDIT_FILE, fileRepository.Combine(path, fileName));
             }
             catch (Exception ex)
             {
@@ -120,13 +109,12 @@ namespace fyleo.Pages
             return LocalRedirect(GetCurrentUrl(path));
         }
 
-
-
         public async Task<IActionResult> OnPostFolderEdit(string path, string oldFolderName, string folderName)
         {
             try
             {
-                System.IO.Directory.Move(path + oldFolderName, path + folderName);
+                fileRepository.EditFolder(path, oldFolderName, folderName);
+                await LogEvent(Actions.EDIT_FOLDER, fileRepository.Combine(path, folderName));
             }
             catch (Exception ex)
             {
@@ -134,7 +122,6 @@ namespace fyleo.Pages
             }
 
             string url = GetCurrentUrl(path);
-            await LogEvent(Actions.EDIT_FOLDER, path + folderName);
             await GetLastestActivities();
             return LocalRedirect(url);
         }
@@ -143,7 +130,8 @@ namespace fyleo.Pages
         {
             try
             {
-                System.IO.Directory.CreateDirectory(path + newFolderName);
+                fileRepository.CreateFolder(path, newFolderName);
+                await LogEvent(Actions.CREATE_FOLDER, path + newFolderName);
             }
             catch (Exception ex)
             {
@@ -151,8 +139,49 @@ namespace fyleo.Pages
             }
 
             string url = GetCurrentUrl(path);
-            await LogEvent(Actions.CREATE_FOLDER, path + newFolderName);
             await GetLastestActivities();
+            return LocalRedirect(url);
+        }
+
+        public async Task<IActionResult> OnGetFileDownload(string path, string fileName)
+        {
+            var fileBytes = await fileRepository.GetFile(path, fileName);
+            await LogEvent(Actions.DOWNLOAD_FILE, fileRepository.Combine(path, fileName));
+            await GetLastestActivities();
+            return File(fileBytes, "application/force-download", Uri.UnescapeDataString(fileName));
+        }
+
+        public async Task<IActionResult> OnPostFileDelete(string path, string fileName)
+        {
+            try
+            {
+                var filePath = fileRepository.DeleteFile(path, fileName);
+                await LogEvent(Actions.DELETE_FILE, filePath);
+            }
+            catch (Exception ex)
+            {
+                return LocalRedirect("/Error?message=" + ex.Message);
+            }
+
+            await GetLastestActivities();
+            string url = GetCurrentUrl(path);
+            return LocalRedirect(url);
+        }
+
+        public async Task<IActionResult> OnPostFolderDelete(string path, string folderName)
+        {
+            try
+            {
+                var filePath = fileRepository.DeleteFolder(path, folderName);
+                await LogEvent(Actions.DELETE_FOLDER, filePath);
+            }
+            catch (Exception ex)
+            {
+                return LocalRedirect("/Error?message=" + ex.Message);
+            }
+
+            await GetLastestActivities();
+            string url = GetCurrentUrl(System.IO.Path.Combine(path, folderName));
             return LocalRedirect(url);
         }
 
@@ -162,60 +191,6 @@ namespace fyleo.Pages
             var currentLeaf = path.Split('/')[path.Split('/').Length - 2];
             var url = $"/changeFolder?folderName={currentLeaf}&path={currentFolder}";
             return url;
-        }
-
-        public async Task<IActionResult> OnGetFileDownload(string path, string fileName)
-        {
-            var filePath = path + fileName;
-            filePath = Uri.UnescapeDataString(filePath);
-
-            byte[] fileBytes = await System.IO.File.ReadAllBytesAsync(filePath);
-
-            await LogEvent(Actions.DOWNLOAD_FILE, filePath);
-            await GetLastestActivities();
-            return File(fileBytes, "application/force-download", Uri.UnescapeDataString(fileName));
-        }
-
-        public async Task<IActionResult> OnPostFileDelete(string path, string fileName)
-        {
-            var filePath = path + fileName;
-            try
-            {
-                var trashPath = RootPath + "/" + Translations.Trash + "/" + fileName + "." + DateTime.UtcNow.Ticks.ToString();
-
-                System.IO.File.Copy(filePath, trashPath);
-                System.IO.File.Delete(filePath);
-            }
-            catch (Exception ex)
-            {
-                return LocalRedirect("/Error?message=" + ex.Message);
-            }
-
-            await LogEvent(Actions.DELETE_FILE, filePath);
-
-            await GetLastestActivities();
-            string url = GetCurrentUrl(path);
-            return LocalRedirect(url);
-        }
-
-        public async Task<IActionResult> OnPostFolderDelete(string path, string folderName)
-        {
-            var folderPath = path + folderName;
-            try
-            {
-                var trashPath = RootPath + "/" + Translations.Trash + "/" + folderName + DateTime.UtcNow.Ticks.ToString();
-                System.IO.Directory.Move(folderPath, trashPath);
-            }
-            catch (Exception ex)
-            {
-                return LocalRedirect("/Error?message=" + ex.Message);
-            }
-
-            await LogEvent(Actions.DELETE_FOLDER, folderPath);
-
-            await GetLastestActivities();
-            string url = GetCurrentUrl(folderPath);
-            return LocalRedirect(url);
         }
 
         private async Task GetLastestActivities()

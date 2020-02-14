@@ -6,6 +6,7 @@ namespace fyleo.EventLog
         public const string LOGOUT = "logout";
         public const string DOWNLOAD_FILE = "download-file";
         public const string UPLOAD_FILE = "upload-file";
+        public const string EDIT_FILE = "edit-file";
         public const string DELETE_FILE = "delete-file";
         public const string CREATE_FOLDER = "create-folder";
         public const string EDIT_FOLDER = "edit-folder";
