@@ -1,9 +1,8 @@
 Bugs/Dev:
-- Trash as system element
+- Unit Tests
 
 Open:
 - Admin role+ page for user management
-- Tests
 - File Metadata (Userinfo, Versioning)
 - User list with Email
 - Email notifications 
